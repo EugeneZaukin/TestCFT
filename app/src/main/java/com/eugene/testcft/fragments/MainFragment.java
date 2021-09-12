@@ -1,6 +1,8 @@
 package com.eugene.testcft.fragments;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,6 +35,9 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class MainFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -57,6 +62,7 @@ public class MainFragment extends Fragment {
         } else {
             loadJsonFromUrl();
         }
+        updateValutesByTime();
     }
 
     //Отрисовка списка
@@ -130,5 +136,16 @@ public class MainFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(KEY_FOR_PARCE, (ArrayList<? extends Parcelable>) listParcelableObj);
+    }
+
+    //Обновление данных каждые 10 минут
+    private void updateValutesByTime() {
+        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+        exec.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                loadJsonFromUrl();
+            }
+        }, 0, 10, TimeUnit.MINUTES);
     }
 }
