@@ -9,17 +9,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.eugene.testcft.R;
+import com.eugene.testcft.model.JsonObjectOfList;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.DecimalFormat;
 import java.util.List;
 
 public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.ViewHolder> {
-    final private List<JSONObject> data;
+    final private List<JsonObjectOfList> data;
 
-    public CurrencyAdapter(List<JSONObject> data) {
+    public CurrencyAdapter(List<JsonObjectOfList> data) {
         this.data = data;
     }
 
@@ -32,16 +29,10 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull CurrencyAdapter.ViewHolder holder, int position) {
-        try {
-            JSONObject jsObject = data.get(position);
-            DecimalFormat decFormat = new DecimalFormat("#.##");
-
-            holder.getName().setText(jsObject.getString("Name"));
-            holder.charCode.setText(jsObject.getString("CharCode"));
-            holder.getValue().setText(decFormat.format(Double.parseDouble(jsObject.getString("Value"))));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            JsonObjectOfList jsObject = data.get(position);
+            holder.getName().setText(jsObject.getNameJSO());
+            holder.getCharCode().setText(jsObject.getCharCodeJSO());
+            holder.getValue().setText(jsObject.getValueJSO());
     }
 
     @Override
@@ -67,6 +58,10 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.ViewHo
 
         public TextView getValue() {
             return value;
+        }
+
+        public TextView getCharCode() {
+            return charCode;
         }
     }
 }

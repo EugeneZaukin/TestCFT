@@ -1,7 +1,11 @@
 package com.eugene.testcft.fragments;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -20,17 +24,20 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.eugene.testcft.R;
 import com.eugene.testcft.adapter.CurrencyAdapter;
+import com.eugene.testcft.model.JsonObjectOfList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 public class MainFragment extends Fragment {
     private RecyclerView recyclerView;
+    private List<JsonObjectOfList> listParcelableObj;
+    private final String KEY_FOR_PARCE = "KEY_FOR_PARCE";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -41,21 +48,29 @@ public class MainFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        setHasOptionsMenu(true);
         recyclerView = view.findViewById(R.id.recycler_view_list);
-        loadJsonFromUrl();
+
+        if (savedInstanceState != null) {
+            listParcelableObj = savedInstanceState.getParcelableArrayList(KEY_FOR_PARCE);
+            initRecyclerView(recyclerView, listParcelableObj);
+        } else {
+            loadJsonFromUrl();
+        }
     }
 
     //Отрисовка списка
-    private void initRecyclerView(RecyclerView recyclerView, List<JSONObject> data) {
+    private void initRecyclerView(RecyclerView recyclerView, List<JsonObjectOfList> data) {
         recyclerView.setHasFixedSize(true);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
-
         CurrencyAdapter adapter = new CurrencyAdapter(data);
         recyclerView.setAdapter(adapter);
+
+        adapter.notifyDataSetChanged();
     }
 
-    //Загружаем Json и при успешном запросе передаем лист обхектов и recycler view для отрисовки
+    //Загружаем Json и при успешном запросе передаем лист объектов и recycler view для отрисовки
     private void loadJsonFromUrl() {
         String urlText = "https://www.cbr-xml-daily.ru/daily_json.js";
         StringRequest stringRequest = new StringRequest(Request.Method.GET, urlText,
@@ -66,14 +81,18 @@ public class MainFragment extends Fragment {
                             JSONObject object = new JSONObject(response);
                             JSONObject jsonValute = object.getJSONObject("Valute");
 
-                            List<JSONObject> listJsonValutes = new ArrayList<>();
                             Iterator<String> jsonValuteKeys = jsonValute.keys();
+                            listParcelableObj = new ArrayList<>();
+                            DecimalFormat decFormat = new DecimalFormat("#.##");
 
                             while (jsonValuteKeys.hasNext()) {
-                                listJsonValutes.add(jsonValute.getJSONObject(jsonValuteKeys.next()));
+                                JSONObject jsonObject = jsonValute.getJSONObject(jsonValuteKeys.next());
+                                listParcelableObj.add(new JsonObjectOfList(jsonObject.getString("Name"),
+                                                                    jsonObject.getString("CharCode"),
+                                                                    decFormat.format(Double.parseDouble(jsonObject.getString("Value")))));
                             }
+                            initRecyclerView(recyclerView, listParcelableObj);
 
-                            initRecyclerView(recyclerView, listJsonValutes);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -87,5 +106,29 @@ public class MainFragment extends Fragment {
 
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         requestQueue.add(stringRequest);
+    }
+
+    //Создание меню
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_main, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    //Обработка кнопки для обновления данных
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.update_list) {
+            loadJsonFromUrl();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    //Сохранение данных при повороте экрана
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(KEY_FOR_PARCE, (ArrayList<? extends Parcelable>) listParcelableObj);
     }
 }
