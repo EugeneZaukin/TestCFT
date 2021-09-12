@@ -57,9 +57,8 @@ public class MainFragment extends Fragment {
             listParcelableObj = savedInstanceState.getParcelableArrayList(KEY_FOR_PARCE);
             initRecyclerView(recyclerView, listParcelableObj);
         } else {
-            loadJsonFromUrl();
+            updateValutesByTime();
         }
-        updateValutesByTime();
     }
 
     //Отрисовка списка
