@@ -9,14 +9,17 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.eugene.testcft.R;
-import com.eugene.testcft.model.BanksCurrency;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.DecimalFormat;
 import java.util.List;
 
 public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.ViewHolder> {
-    private List<BanksCurrency> data;
+    final private List<JSONObject> data;
 
-    public CurrencyAdapter(List<BanksCurrency> data) {
+    public CurrencyAdapter(List<JSONObject> data) {
         this.data = data;
     }
 
@@ -29,8 +32,16 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull CurrencyAdapter.ViewHolder holder, int position) {
-        holder.getName().setText(data.get(position).getName());
-        holder.getValue().setText(data.get(position).getValue());
+        try {
+            JSONObject jsObject = data.get(position);
+            DecimalFormat decFormat = new DecimalFormat("#.##");
+
+            holder.getName().setText(jsObject.getString("Name"));
+            holder.charCode.setText(jsObject.getString("CharCode"));
+            holder.getValue().setText(decFormat.format(Double.parseDouble(jsObject.getString("Value"))));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -39,12 +50,14 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.ViewHo
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView name;
-        private TextView value;
+        private final TextView name;
+        private final TextView charCode;
+        private final TextView value;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.item_name);
+            charCode = itemView.findViewById(R.id.item_charCode);
             value = itemView.findViewById(R.id.item_value);
         }
 
